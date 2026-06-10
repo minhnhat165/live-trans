@@ -78,9 +78,6 @@ export default function App(): React.JSX.Element {
   const captureRef = useRef<SystemAudioCapture | null>(null)
   const playerRef = useRef<TranslatedAudioPlayer | null>(null)
   const clientRef = useRef<LiveTranslateClient | null>(null)
-  // Live API session-resumption handle, restored from disk and refreshed as the
-  // server issues new ones, so a session can resume across reconnects and restarts.
-  const resumeHandleRef = useRef('')
   const origRef = useRef<HTMLDivElement | null>(null)
   const transRef = useRef<HTMLDivElement | null>(null)
 
@@ -97,7 +94,6 @@ export default function App(): React.JSX.Element {
       setEcho(s.echoTargetLanguage)
       setOutputDeviceId(s.outputDeviceId)
       setTotalCost(s.totalCostUsd)
-      resumeHandleRef.current = s.resumptionHandle
       if (s.hasApiKey) setShowSettings(false)
     })
     void refreshDevices()
@@ -214,15 +210,6 @@ export default function App(): React.JSX.Element {
           setStatus((s) => (s === 'error' ? s : 'listening'))
           setMessage('Reconnected — resuming translation.')
         },
-        // Persist each fresh handle so the session can resume across app restarts.
-        onSessionHandle: (h) => {
-          resumeHandleRef.current = h
-          window.api.saveSessionHandle(h)
-        },
-        onHandleInvalidated: () => {
-          resumeHandleRef.current = ''
-          window.api.clearSessionHandle()
-        },
         onInputTranscript: (t) => setOriginal((p) => appendCapped(p, t)),
         onOutputTranscript: (t) => setTranslated((p) => appendCapped(p, t)),
         onTurnComplete: () => {
@@ -243,8 +230,7 @@ export default function App(): React.JSX.Element {
           setStatus((s) => (s === 'error' ? s : 'idle'))
           setMessage(reason ? `Disconnected (${code}): ${reason}` : `Disconnected (${code}).`)
         }
-      },
-      resumeHandleRef.current || undefined
+      }
     )
   }
 

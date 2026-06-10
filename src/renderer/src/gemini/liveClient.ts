@@ -24,10 +24,6 @@ export type LiveHandlers = {
   // Reconnect lifecycle (capture/playback stay alive across these).
   onReconnecting: (attempt: number, delayMs: number) => void
   onReconnected: () => void
-  // A fresh resumable handle to persist (server-issued, periodic).
-  onSessionHandle: (handle: string) => void
-  // A persisted handle we replayed turned out to be stale — drop it from storage.
-  onHandleInvalidated: () => void
   // Transcripts arrive as incremental deltas (small fragments) — append them.
   // onTurnComplete (rare for this model) marks a turn boundary.
   onInputTranscript: (delta: string) => void
@@ -48,13 +44,12 @@ export class LiveTranslateClient {
   private config: LiveConfig | null = null
   private handlers: LiveHandlers | null = null
 
-  // Session resumption: handle returned by the server, replayed on the next
-  // connect so the model continues the same conversation/context.
+  // In-session resumption only: a handle the server issues mid-session, replayed
+  // on a transparent reconnect (goAway / network drop) so the SAME live session
+  // continues without a gap. Reset to null on every fresh connect() — we never
+  // resume an old session across manual start/stop or app restarts (that bloats
+  // the session context and makes responses slow + choppy).
   private resumptionHandle: string | null = null
-
-  // True while the very first connection is still riding a handle restored from
-  // disk — lets us drop it and retry fresh if it proves stale.
-  private usingPersistedHandle = false
 
   private hasReadyOnce = false
   private closedByUser = false
@@ -62,11 +57,12 @@ export class LiveTranslateClient {
   private reconnectAttempts = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
-  connect(config: LiveConfig, handlers: LiveHandlers, resumeHandle?: string): void {
+  connect(config: LiveConfig, handlers: LiveHandlers): void {
     this.config = config
     this.handlers = handlers
-    this.resumptionHandle = resumeHandle || null
-    this.usingPersistedHandle = !!resumeHandle
+    // Always start a fresh session; resumption is only used internally for
+    // transparent reconnects within this same run (set from server messages).
+    this.resumptionHandle = null
     this.hasReadyOnce = false
     this.closedByUser = false
     this.reconnectAttempts = 0
@@ -116,9 +112,8 @@ export class LiveTranslateClient {
     }
 
     ws.onerror = () => {
-      // Don't surface as a hard error during reconnect attempts or while probing a
-      // persisted handle — onclose drives recovery / the fresh-retry fallback.
-      if (this.hasReadyOnce || this.usingPersistedHandle) return
+      // Don't surface as a hard error during reconnect attempts — onclose drives recovery.
+      if (this.hasReadyOnce) return
       handlers.onError('WebSocket error — check your API key, network, and model access.')
     }
 
@@ -128,17 +123,6 @@ export class LiveTranslateClient {
 
       if (this.closedByUser) {
         handlers.onClose({ code: ev.code, reason: ev.reason })
-        return
-      }
-
-      // A restored handle that never reached setupComplete is likely expired/invalid:
-      // discard it and retry once, fresh and fast, without burning the failure budget.
-      if (!this.hasReadyOnce && this.usingPersistedHandle) {
-        this.usingPersistedHandle = false
-        this.resumptionHandle = null
-        handlers.onHandleInvalidated()
-        handlers.onReconnecting(0, GOAWAY_RECONNECT_MS)
-        this.reconnectTimer = setTimeout(() => this.openSocket(), GOAWAY_RECONNECT_MS)
         return
       }
 
@@ -179,7 +163,6 @@ export class LiveTranslateClient {
     if (msg.setupComplete) {
       this.ready = true
       this.reconnectAttempts = 0
-      this.usingPersistedHandle = false
       if (!this.hasReadyOnce) {
         this.hasReadyOnce = true
         handlers.onReady()
@@ -189,12 +172,12 @@ export class LiveTranslateClient {
       return
     }
 
-    // Server hands us a resumption token; keep the latest resumable one.
+    // Server hands us a resumption token; keep the latest resumable one in memory
+    // so a transparent reconnect within this session can replay it. Not persisted.
     const resume = msg.sessionResumptionUpdate
     if (resume) {
       if (resume.resumable && resume.newHandle) {
         this.resumptionHandle = resume.newHandle
-        handlers.onSessionHandle(resume.newHandle)
       }
       return
     }

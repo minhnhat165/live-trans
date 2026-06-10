@@ -7,7 +7,6 @@ export type AppSettings = {
   targetLang: string
   echoTargetLanguage: boolean
   outputDeviceId: string
-  resumptionHandle: string
   encryptionAvailable: boolean
   platform: string
 }
@@ -23,9 +22,6 @@ const api = {
   addTotalCost: (deltaUsd: number): Promise<number> =>
     ipcRenderer.invoke('cost:addTotal', deltaUsd),
   resetTotalCost: (): Promise<number> => ipcRenderer.invoke('cost:resetTotal'),
-  saveSessionHandle: (handle: string): Promise<boolean> =>
-    ipcRenderer.invoke('session:saveHandle', handle),
-  clearSessionHandle: (): Promise<boolean> => ipcRenderer.invoke('session:clearHandle'),
   ensureAudioPermission: (): Promise<boolean> => ipcRenderer.invoke('perm:ensureAudio'),
 
   // System-audio capture via AudioTee (Core Audio tap, excludes our own process tree).

@@ -9,14 +9,7 @@ type Persisted = {
   targetLang: string
   echoTargetLanguage: boolean
   outputDeviceId: string
-  resumptionHandle?: string // Live API session-resumption token
-  resumptionHandleAt?: number // epoch ms it was stored (for staleness gating)
 }
-
-// Only replay a persisted resumption handle if it's reasonably fresh. The client
-// has a fresh-retry fallback for stale handles, so this is just to skip obviously
-// dead ones; the exact server-side TTL for translate handles isn't documented.
-const RESUME_MAX_AGE_MS = 12 * 60 * 60 * 1000 // 12h
 
 const store = new Store<Persisted>({
   defaults: {
@@ -26,14 +19,6 @@ const store = new Store<Persisted>({
     outputDeviceId: 'default'
   }
 })
-
-function getFreshResumptionHandle(): string {
-  const handle = store.get('resumptionHandle')
-  const at = store.get('resumptionHandleAt') || 0
-  if (!handle) return ''
-  if (Date.now() - at > RESUME_MAX_AGE_MS) return ''
-  return handle
-}
 
 function getApiKey(): string {
   const enc = store.get('apiKeyEnc')
@@ -256,26 +241,11 @@ ipcMain.handle('settings:get', () => ({
   targetLang: store.get('targetLang'),
   echoTargetLanguage: store.get('echoTargetLanguage'),
   outputDeviceId: store.get('outputDeviceId'),
-  resumptionHandle: getFreshResumptionHandle(),
   encryptionAvailable: safeStorage.isEncryptionAvailable(),
   platform: process.platform
 }))
 
 ipcMain.handle('settings:setApiKey', (_e, key: string) => setApiKey(key))
-
-ipcMain.handle('session:saveHandle', (_e, handle: string) => {
-  if (handle) {
-    store.set('resumptionHandle', handle)
-    store.set('resumptionHandleAt', Date.now())
-  }
-  return true
-})
-
-ipcMain.handle('session:clearHandle', () => {
-  store.delete('resumptionHandle')
-  store.delete('resumptionHandleAt')
-  return true
-})
 
 ipcMain.handle('settings:setPrefs', (_e, prefs: Partial<Persisted>) => {
   if (typeof prefs.targetLang === 'string') store.set('targetLang', prefs.targetLang)

@@ -7,6 +7,12 @@ function base64ToInt16(b64: string): Int16Array {
   return new Int16Array(bytes.buffer.slice(0, len - (len % 2)))
 }
 
+// Small lookahead added when (re)starting playback after the queue has drained.
+// The model streams audio in bursts with network jitter between chunks; scheduling
+// the first chunk ~150ms in the future gives later chunks a cushion to arrive before
+// their play time, so brief delivery gaps don't turn into audible dropouts.
+const JITTER_S = 0.15
+
 /**
  * Plays back 24 kHz / 16-bit / mono PCM chunks (base64) from Gemini Live Translate,
  * routed to a chosen output device (e.g. headphones) so it is not re-captured by loopback.
@@ -56,8 +62,10 @@ export class TranslatedAudioPlayer {
     src.connect(this.gain)
     this.sources.add(src)
     src.onended = () => this.sources.delete(src)
+    // If the queue has drained (playHead caught up to "now"), restart slightly in the
+    // future so jittery chunk arrivals have a cushion — smooths out audible gaps.
     const now = this.ctx.currentTime
-    if (this.playHead < now) this.playHead = now
+    if (this.playHead < now + JITTER_S) this.playHead = now + JITTER_S
     src.start(this.playHead)
     this.playHead += buffer.duration
   }
