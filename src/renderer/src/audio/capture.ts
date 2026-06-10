@@ -5,9 +5,10 @@ export type CaptureHandlers = {
 }
 
 /**
- * System audio capture. The actual tap runs in the main process (AudioTee / Core Audio,
- * excluding our own process tree so the translation playback is never re-captured). Main
- * streams 16 kHz / 16-bit / mono PCM frames here over IPC; we just forward them.
+ * System audio capture. The actual tap runs in the main process (macOS: AudioTee / Core Audio;
+ * Windows: WASAPI process loopback) — always excluding our own process tree so the translation
+ * playback is never re-captured. Main streams 16 kHz / 16-bit / mono PCM frames here over IPC;
+ * we just forward them.
  */
 export class SystemAudioCapture {
   private unsubPcm: (() => void) | null = null

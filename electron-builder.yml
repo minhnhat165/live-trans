@@ -39,3 +39,21 @@ mac:
 
 dmg:
   title: live-trans ${version}
+
+win:
+  icon: build/icon-1024.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # The WASAPI loopback helper is our own binary (built from native/win-audio-capture), not an
+  # npm dependency, so we copy it in as an extra resource rather than asarUnpack'ing node_modules.
+  # In the main process it is resolved at process.resourcesPath/win-audio-capture/.
+  extraResources:
+    - from: native/win-audio-capture/build/Release/live-trans-capture.exe
+      to: win-audio-capture/live-trans-capture.exe
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true

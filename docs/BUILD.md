@@ -76,6 +76,53 @@ gh release create v0.1.0 \
 
 Then link that release in the README and your launch tweet.
 
+## Building a Windows installer
+
+The Windows build mirrors macOS but swaps the audio backend: instead of the `audiotee` Swift
+binary it ships **`live-trans-capture.exe`**, our own WASAPI process-loopback helper
+([`native/win-audio-capture`](../native/win-audio-capture)). It captures the system mix while
+excluding our own process tree — the same no-feedback property the macOS tap gets by excluding the
+audio-service PID.
+
+> Run these on a **Windows 10 build 20348+ / Windows 11** machine. The process-loopback API is not
+> available on older Windows, and the helper can only be compiled and tested there.
+
+### Prerequisites (one-time)
+
+- **Visual Studio 2022** (or Build Tools for VS 2022) with the **Desktop development with C++**
+  workload — provides MSVC + the Windows SDK.
+- **CMake** (bundled with VS, or install standalone and add to `PATH`).
+- Node + **bun** and the repo deps (`bun install`).
+
+### Build
+
+```powershell
+# 1) Compile the native capture helper (CMake → build/Release/live-trans-capture.exe)
+bun run build:win-helper
+
+# 2) Build the app + package an NSIS installer (dist:win wraps both steps + electron-builder)
+bun run dist:win
+```
+
+`dist:win` runs `build:win-helper` → `electron-vite build` → `electron-builder --win`. The helper
+exe is copied into the installer as an extra resource (`resources/win-audio-capture/`), where the
+main process resolves it at runtime via `process.resourcesPath`.
+
+Output: `release/live-trans Setup <version>.exe`.
+
+To smoke-test packaging without building the installer (unpacked app in `release/win-unpacked/`):
+
+```powershell
+bun run pack:win
+./release/win-unpacked/live-trans.exe
+```
+
+### Code signing (optional)
+
+The installer is unsigned by default, so SmartScreen will warn on first run. To sign, set
+`CSC_LINK` (path/base64 of a `.pfx`) and `CSC_KEY_PASSWORD` in the environment before `dist:win`;
+electron-builder signs both the app and the installer automatically.
+
 ## Optional polish
 
 - **App icon** — `build/icon.icns` (white headphones on a teal squircle, matching the

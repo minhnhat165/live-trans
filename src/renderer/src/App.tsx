@@ -74,6 +74,9 @@ export default function App(): React.JSX.Element {
   const playAudioRef = useRef(true)
   const [showSettings, setShowSettings] = useState(true)
   const [showUsage, setShowUsage] = useState(false)
+  // macOS uses a hidden-inset title bar (content slides under the traffic lights); Windows/Linux
+  // keep the native frame, so we only reserve the traffic-light strip on macOS.
+  const [isMac, setIsMac] = useState(false)
 
   const captureRef = useRef<SystemAudioCapture | null>(null)
   const playerRef = useRef<TranslatedAudioPlayer | null>(null)
@@ -94,6 +97,7 @@ export default function App(): React.JSX.Element {
       setEcho(s.echoTargetLanguage)
       setOutputDeviceId(s.outputDeviceId)
       setTotalCost(s.totalCostUsd)
+      setIsMac(s.platform === 'darwin')
       if (s.hasApiKey) setShowSettings(false)
     })
     void refreshDevices()
@@ -286,8 +290,8 @@ export default function App(): React.JSX.Element {
     <div className="flex h-full flex-col bg-background text-foreground">
       {/* ---- Title bar ---- */}
       <header className="drag-region flex shrink-0 flex-col border-b border-border/60">
-        {/* thin strip reserving space for the macOS traffic-light buttons */}
-        <div className="h-9 shrink-0" />
+        {/* thin strip reserving space for the macOS traffic-light buttons (none on Windows/Linux) */}
+        <div className={isMac ? 'h-9 shrink-0' : 'h-3 shrink-0'} />
         <div className="flex items-center justify-between px-4 pb-3.5">
           <div className="flex items-center gap-2.5">
             <div className="grid h-8 w-8 place-items-center rounded-[9px] bg-linear-to-br from-accent to-[#0e8f80] shadow-sm ring-1 ring-white/10">

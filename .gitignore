@@ -7,6 +7,9 @@ dist/
 release/
 *.tsbuildinfo
 
+# Native helper build output (the Windows WASAPI capture binary; source is committed)
+native/win-audio-capture/build/
+
 # Logs
 *.log
 npm-debug.log*
