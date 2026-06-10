@@ -105,3 +105,10 @@ If live-trans saves you some time, you can buy me a coffee — it genuinely help
 building and shipping. Thank you! ☕
 
 [![Buy me a coffee on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/minhnhat165)
+
+## License
+
+[PolyForm Noncommercial License 1.0.0](LICENSE.md) — you're free to use, study, and modify
+live-trans for **noncommercial** purposes (personal use, learning, research, hobby projects).
+**Commercial use is not permitted** without a separate license. If you'd like to use it
+commercially, reach out.

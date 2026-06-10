@@ -4,6 +4,7 @@
 	"description": "Real-time desktop translator for system audio, powered by Gemini 3.5 Live Translate",
 	"main": "out/main/index.js",
 	"author": "minhnhat165",
+	"license": "SEE LICENSE IN LICENSE.md",
 	"scripts": {
 		"dev": "electron-vite dev",
 		"build": "electron-vite build",
