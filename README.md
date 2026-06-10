@@ -108,7 +108,7 @@ building and shipping. Thank you! ☕
 
 ## License
 
-[PolyForm Noncommercial License 1.0.0](LICENSE.md) — you're free to use, study, and modify
+[PolyForm Noncommercial License 1.0.0](LICENSE) — you're free to use, study, and modify
 live-trans for **noncommercial** purposes (personal use, learning, research, hobby projects).
 **Commercial use is not permitted** without a separate license. If you'd like to use it
 commercially, reach out.
