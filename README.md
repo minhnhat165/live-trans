@@ -9,7 +9,7 @@ switch, and hear the translation (and read live subtitles) in your chosen langua
 
 ![live-trans translating a WWDC video from English to Vietnamese in real time](docs/screenshot.png)
 
-<sub>Translating Apple's WWDC SwiftUI session into Vietnamese, live — original + translation side by side, with a running cost meter.</sub>
+<sub>Translating Google's "Introducing Gemini 3.5 Live Translate" video into Vietnamese, live — original + translation side by side, with a running cost meter.</sub>
 
 ## Download
 
