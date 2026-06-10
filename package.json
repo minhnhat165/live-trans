@@ -1,0 +1,31 @@
+{
+	"name": "live-trans",
+	"version": "0.1.0",
+	"description": "Real-time desktop translator for system audio, powered by Gemini 3.5 Live Translate",
+	"main": "out/main/index.js",
+	"author": "minhnhat165",
+	"scripts": {
+		"dev": "electron-vite dev",
+		"build": "electron-vite build",
+		"preview": "electron-vite preview",
+		"typecheck": "tsc --noEmit -p tsconfig.json"
+	},
+	"dependencies": {
+		"audiotee": "^0.0.7",
+		"electron-store": "^8.2.0"
+	},
+	"devDependencies": {
+		"@tailwindcss/vite": "^4.1.7",
+		"@types/node": "^22.15.0",
+		"@types/react": "^19.1.0",
+		"@types/react-dom": "^19.1.0",
+		"@vitejs/plugin-react": "^4.3.4",
+		"electron": "^36.2.0",
+		"electron-vite": "^4.0.0",
+		"react": "^19.1.0",
+		"react-dom": "^19.1.0",
+		"tailwindcss": "^4.1.7",
+		"typescript": "^5.8.3",
+		"vite": "^6.3.5"
+	}
+}
