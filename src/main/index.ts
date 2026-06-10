@@ -102,7 +102,10 @@ const FRAME_BYTES = 3200 // 100ms @ 16kHz, 16-bit mono
 function audioteeBinaryPath(): string {
   // Resolve the prebuilt Swift binary shipped inside the audiotee package.
   const dist = require.resolve('audiotee')
-  return join(dirname(dist), '..', 'bin', 'audiotee')
+  const path = join(dirname(dist), '..', 'bin', 'audiotee')
+  // In a packaged build the binary is asarUnpack'd; require.resolve still reports the
+  // path inside app.asar, so redirect to the unpacked copy we can actually exec.
+  return app.isPackaged ? path.replace('app.asar', 'app.asar.unpacked') : path
 }
 
 // PIDs in our own process subtree (descendants of the main process).

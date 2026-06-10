@@ -8,7 +8,9 @@
 		"dev": "electron-vite dev",
 		"build": "electron-vite build",
 		"preview": "electron-vite preview",
-		"typecheck": "tsc --noEmit -p tsconfig.json"
+		"typecheck": "tsc --noEmit -p tsconfig.json",
+		"dist:mac": "electron-vite build && electron-builder --mac",
+		"pack:mac": "electron-vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dir --arm64 -c.mac.notarize=false"
 	},
 	"dependencies": {
 		"audiotee": "^0.0.7",
@@ -21,6 +23,7 @@
 		"@types/react-dom": "^19.1.0",
 		"@vitejs/plugin-react": "^4.3.4",
 		"electron": "^36.2.0",
+		"electron-builder": "^26.15.2",
 		"electron-vite": "^4.0.0",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",

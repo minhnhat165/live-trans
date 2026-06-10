@@ -11,6 +11,34 @@ switch, and hear the translation (and read live subtitles) in your chosen langua
 
 <sub>Translating Apple's WWDC SwiftUI session into Vietnamese, live — original + translation side by side, with a running cost meter.</sub>
 
+## Download
+
+Grab the latest **signed & notarized `.dmg`** from the
+[**Releases page**](https://github.com/minhnhat165/live-trans/releases) — drag it into
+Applications and open. Universal build (Apple Silicon + Intel), macOS 14.2+.
+
+You'll still need your own [Gemini API key](#requirements). Prefer to build from source?
+See [`docs/BUILD.md`](docs/BUILD.md).
+
+## Using the app
+
+1. **Get a Gemini API key** at [Google AI Studio](https://aistudio.google.com/apikey) with
+   access to the `gemini-3.5-live-translate-preview` model.
+2. Open live-trans → click the **⚙️ Settings** gear → paste your API key (stored encrypted in
+   the macOS keychain) → pick your **target language**.
+3. **Output device:** choose your **headphones**. The audio tap excludes this app's own output,
+   but speakers can still leak translated audio back into the mic — headphones avoid that. For
+   subtitles only, turn off **"Play translated audio"**.
+4. Hit **▶ Enable translation** and grant the macOS audio-recording permission when prompted.
+5. Play any foreign-language video or call. The **Original** column shows the detected speech;
+   the **Translation** column shows your language, live — and the translated voice plays on the
+   device you picked.
+6. **📊 Usage** shows token counts and live cost; **■ Stop** ends the session. Long videos keep
+   going — the session auto-resumes across the Live API's reconnects.
+
+> 💡 Use headphones. Without them, your speakers feed the translated audio back into the tap
+> and the model starts echoing itself.
+
 ## How it works
 
 ```
@@ -54,19 +82,15 @@ Electron · electron-vite · React · TypeScript · Tailwind v4 · [audiotee](ht
 
 ## Roadmap / next steps
 
-1. **Session resumption + auto-reconnect** — the Live API caps session length and sends
-   `goAway` before dropping. We already receive `sessionResumptionUpdate` handles but ignore
-   them; wire up `setup.sessionResumption` and reconnect transparently so long videos don't
-   cut out. *(Highest priority.)*
-2. **Packaging** — electron-builder for a `.dmg`; `asarUnpack` the `audiotee` binary, add
-   `NSAudioCaptureUsageDescription` to Info.plist, code-sign + notarize.
-3. **Windows support** — `audiotee` is macOS-only; add a WASAPI-loopback capture path
+1. **Windows support** — `audiotee` is macOS-only; add a WASAPI-loopback capture path
    (exclude-self equivalent) behind the same `capture:*` IPC.
-4. **Pricing accuracy** — rates are editable estimates ($10/1M in+out by default); replace
+2. **Pricing accuracy** — rates are editable estimates ($10/1M in+out by default); replace
    with official `gemini-3.5-live-translate-preview` numbers when published.
-5. **UX** — source-language badge (from transcript `languageCode`), adjustable subtitle font,
+3. **UX** — source-language badge (from transcript `languageCode`), adjustable subtitle font,
    save/export transcript, global hotkey to toggle, optional "capture only one app"
    (`--include-processes`) mode.
+
+Done: ✅ session resumption + auto-reconnect · ✅ signed & notarized `.dmg` packaging.
 
 ## Notes
 
@@ -74,3 +98,10 @@ Electron · electron-vite · React · TypeScript · Tailwind v4 · [audiotee](ht
   `electron-store`. Lifetime spend is tracked locally.
 - Transcripts arrive as incremental deltas and are appended; `usageMetadata` is per-message
   incremental and is accumulated for the cost meter.
+
+## Support
+
+If live-trans saves you some time, you can buy me a coffee — it genuinely helps me keep
+building and shipping. Thank you! ☕
+
+[![Buy me a coffee on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/minhnhat165)

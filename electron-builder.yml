@@ -1,0 +1,41 @@
+appId: com.minhnhat165.live-trans
+productName: live-trans
+copyright: Copyright © 2026 minhnhat165
+
+directories:
+  output: release
+  buildResources: build
+
+# electron-vite emits the app into out/; package.json "main" points at out/main/index.js.
+files:
+  - out/**
+  - package.json
+
+asar: true
+# The audiotee Swift binary must live outside the asar archive so we can spawn it.
+asarUnpack:
+  - "**/node_modules/audiotee/bin/**"
+
+mac:
+  category: public.app-category.utilities
+  minimumSystemVersion: "14.2"
+  target:
+    - target: dmg
+      arch:
+        - universal
+  # Pinned because two Developer ID certs exist in the keychain — avoid picking the wrong one.
+  # electron-builder wants the name WITHOUT the "Developer ID Application:" prefix.
+  identity: "Nhat Nguyen (5L43ZT5F4H)"
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  # Notarization runs when APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID
+  # are set in the environment (see docs/BUILD.md).
+  notarize: true
+  extendInfo:
+    NSMicrophoneUsageDescription: live-trans captures your system audio to translate it in real time.
+    NSAudioCaptureUsageDescription: live-trans captures your system audio to translate it in real time.
+
+dmg:
+  title: live-trans ${version}
