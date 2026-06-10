@@ -1,4 +1,4 @@
-# live-trans
+# Live Trans
 
 A desktop app that translates **any system audio in real time** using Google's
 **Gemini 3.5 Live Translate**. Play a foreign-language YouTube video or course, flip the
