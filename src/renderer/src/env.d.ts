@@ -7,6 +7,7 @@ export type AppSettings = {
   targetLang: string
   echoTargetLanguage: boolean
   outputDeviceId: string
+  resumptionHandle: string
   encryptionAvailable: boolean
   platform: string
 }
@@ -21,6 +22,8 @@ export interface PreloadApi {
   }) => Promise<boolean>
   addTotalCost: (deltaUsd: number) => Promise<number>
   resetTotalCost: () => Promise<number>
+  saveSessionHandle: (handle: string) => Promise<boolean>
+  clearSessionHandle: () => Promise<boolean>
   ensureAudioPermission: () => Promise<boolean>
   startCapture: () => Promise<{ ok: boolean; error?: string }>
   stopCapture: () => Promise<boolean>

@@ -7,6 +7,10 @@ switch, and hear the translation (and read live subtitles) in your chosen langua
 > Built to scratch a real itch: watching Hindi / Chinese programming courses without
 > understanding a word.
 
+![live-trans translating a WWDC video from English to Vietnamese in real time](docs/screenshot.png)
+
+<sub>Translating Apple's WWDC SwiftUI session into Vietnamese, live — original + translation side by side, with a running cost meter.</sub>
+
 ## How it works
 
 ```

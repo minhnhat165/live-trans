@@ -44,3 +44,9 @@ export const LANGUAGES: Lang[] = [
 export function labelFor(code: string): string {
   return LANGUAGES.find((l) => l.code === code)?.label ?? code
 }
+
+// Native name only, without the parenthetical English gloss.
+// "Tiếng Việt (Vietnamese)" -> "Tiếng Việt", "English" -> "English".
+export function shortLabel(code: string): string {
+  return labelFor(code).split(' (')[0]
+}
