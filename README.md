@@ -7,7 +7,7 @@ switch, and hear the translation (and read live subtitles) in your chosen langua
 > Built to scratch a real itch: watching Hindi / Chinese programming courses without
 > understanding a word.
 
-![live-trans video](docs/screenshot.png)
+![live-trans translating Google's Gemini 3.5 Live Translate video from English to Vietnamese in real time](docs/demo.png)
 
 <sub>Translating Google's "Introducing Gemini 3.5 Live Translate" video into Vietnamese, live — original + translation side by side, with a running cost meter.</sub>
 
