@@ -10,7 +10,10 @@
 		"preview": "electron-vite preview",
 		"typecheck": "tsc --noEmit -p tsconfig.json",
 		"dist:mac": "electron-vite build && electron-builder --mac",
-		"pack:mac": "electron-vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dir --arm64 -c.mac.notarize=false"
+		"pack:mac": "electron-vite build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dir --arm64 -c.mac.notarize=false",
+		"build:win-helper": "cmake -S native/win-audio-capture -B native/win-audio-capture/build -A x64 && cmake --build native/win-audio-capture/build --config Release",
+		"dist:win": "bun run build:win-helper && electron-vite build && electron-builder --win",
+		"pack:win": "bun run build:win-helper && electron-vite build && electron-builder --win dir"
 	},
 	"dependencies": {
 		"audiotee": "^0.0.7",

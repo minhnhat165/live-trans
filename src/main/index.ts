@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, safeStorage, shell, systemPreferences } from 'electron'
 import { join, dirname } from 'node:path'
+import { existsSync } from 'node:fs'
 import { spawn, execSync, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import Store from 'electron-store'
 
@@ -77,9 +78,12 @@ function createWindow(): void {
   }
 }
 
-// ---- System audio capture via AudioTee (Core Audio process tap) ----
-// We capture the WHOLE system output EXCEPT our own Electron process tree, so the model
-// never hears the translated audio we play back (that was the feedback/looping cause).
+// ---- System audio capture (per-platform loopback tap) ----
+// We capture the WHOLE system output EXCEPT our own Electron process tree, so the model never
+// hears the translated audio we play back (that was the feedback/looping cause). Both backends
+// emit the SAME contract: raw 16 kHz / 16-bit / mono PCM on stdout, JSON log lines on stderr.
+//   - macOS:   audiotee (Core Audio process tap), excluding our audio.mojom.AudioService PID(s).
+//   - Windows: live-trans-capture.exe (WASAPI process loopback), excluding our whole process tree.
 let audioProc: ChildProcessWithoutNullStreams | null = null
 let pcmLeftover: Buffer<ArrayBufferLike> = Buffer.alloc(0)
 const FRAME_BYTES = 3200 // 100ms @ 16kHz, 16-bit mono
@@ -91,6 +95,40 @@ function audioteeBinaryPath(): string {
   // In a packaged build the binary is asarUnpack'd; require.resolve still reports the
   // path inside app.asar, so redirect to the unpacked copy we can actually exec.
   return app.isPackaged ? path.replace('app.asar', 'app.asar.unpacked') : path
+}
+
+function winCaptureBinaryPath(): string {
+  // Packaged via electron-builder `extraResources` (electron-builder.yml) → resources/win-audio-capture/.
+  // In dev, the CMake build output sits under the repo at native/win-audio-capture/build/Release/.
+  return app.isPackaged
+    ? join(process.resourcesPath, 'win-audio-capture', 'live-trans-capture.exe')
+    : join(app.getAppPath(), 'native', 'win-audio-capture', 'build', 'Release', 'live-trans-capture.exe')
+}
+
+// Resolve the capture command + args for the current platform, or an error string if unsupported
+// / the binary is missing. The stdout (PCM) and stderr (JSON) handling downstream is identical.
+function captureSpawnSpec(): { file: string; args: string[] } | { error: string } {
+  if (process.platform === 'darwin') {
+    const exclude = ownAudioServicePids()
+    const args = ['--sample-rate', '16000', '--chunk-duration', '0.1']
+    if (exclude.length) args.push('--exclude-processes', ...exclude.map(String))
+    return { file: audioteeBinaryPath(), args }
+  }
+  if (process.platform === 'win32') {
+    const file = winCaptureBinaryPath()
+    if (!existsSync(file)) {
+      return {
+        error:
+          'Windows audio capture helper not found. Build it with native/win-audio-capture (see docs/BUILD.md).'
+      }
+    }
+    // EXCLUDE our main process tree (renderer + gpu + audio service) so playback is never re-captured.
+    return {
+      file,
+      args: ['--sample-rate', '16000', '--chunk-duration', '0.1', '--exclude-process-tree', String(process.pid)]
+    }
+  }
+  return { error: `System audio capture is not supported on ${process.platform} yet.` }
 }
 
 // PIDs in our own process subtree (descendants of the main process).
@@ -166,12 +204,13 @@ function stopCapture(): void {
 
 ipcMain.handle('capture:start', () => {
   stopCapture()
-  const exclude = ownAudioServicePids()
-  const args = ['--sample-rate', '16000', '--chunk-duration', '0.1']
-  if (exclude.length) args.push('--exclude-processes', ...exclude.map(String))
+  const spec = captureSpawnSpec()
+  if ('error' in spec) {
+    return { ok: false, error: spec.error }
+  }
   let proc: ChildProcessWithoutNullStreams
   try {
-    proc = spawn(audioteeBinaryPath(), args)
+    proc = spawn(spec.file, spec.args)
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }
